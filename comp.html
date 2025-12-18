@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVA - Compare Articles</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSV Parser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-body: #F9FAFB;
+            --border: #E5E7EB;
+            --text-main: #111827;
+            --text-gray: #6B7280;
+            --success: #059669;
+            --danger: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-body);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        aside {
+            width: 290px;
+            background: #ffffff;
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .brand-logo {
+            background-color: #ee3338;
+            padding: 12px;
+            border-radius: 4px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .brand-logo img { height: 32px; filter: brightness(0) invert(1); }
+
+        .filter-group { margin-bottom: 25px; border-bottom: 1px solid #f3f4f6; padding-bottom: 20px; }
+        .filter-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-main); }
+        
+        .stat-box {
+            background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px;
+        }
+        .stat-num { font-size: 24px; font-weight: 800; color: var(--primary); }
+        .stat-lbl { font-size: 12px; color: var(--text-gray); }
+
+        .btn-clear {
+            width: 100%; padding: 12px; background: white; color: var(--danger);
+            border: 1px solid var(--danger); border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: auto;
+        }
+        .btn-clear:hover { background: #fef2f2; }
+
+        /* --- MAIN --- */
+        main {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden; /* Handle inner scroll */
+        }
+
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+        }
+        .page-header h2 { font-size: 22px; font-weight: 700; display:flex; align-items:center; gap:10px; }
+        
+        /* Back Button */
+        .btn-back {
+            text-decoration: none; font-size: 14px; color: var(--text-gray); display:flex; align-items:center; gap:5px;
+            margin-bottom: 10px; font-weight: 500;
+        }
+        .btn-back:hover { color: var(--primary); }
+
+        /* COMPARISON MODULE STYLE */
+        .comparison-container {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: auto;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+            padding-bottom: 20px;
+        }
+
+        /* The Labels Column (Sticky Left) */
+        .specs-labels {
+            min-width: 150px;
+            position: sticky;
+            left: 0;
+            background: #f9fafb;
+            border-right: 1px solid var(--border);
+            z-index: 5;
+            padding-top: 260px; /* Offset for image height */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .label-row {
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-gray);
+            height: 50px;
+            display: flex; align-items: center;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        /* Product Columns */
+        .product-col {
+            min-width: 300px;
+            max-width: 300px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Header Area (Image + Name) */
+        .prod-header {
+            padding: 20px;
+            text-align: center;
+            height: 260px;
+            border-bottom: 1px solid var(--border);
+            background: white;
+        }
+        .img-wrap {
+            height: 140px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;
+        }
+        .img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .prod-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+        .prod-id { font-size: 11px; font-weight: 600; color: #111; text-transform: uppercase; }
+
+        .remove-icon {
+            position: absolute; top: 10px; right: 10px; 
+            color: #ccc; cursor: pointer; font-size: 18px;
+        }
+        .remove-icon:hover { color: var(--danger); }
+
+        /* Data Rows */
+        .data-rows { display: flex; flex-direction: column; gap: 20px; background: white; }
+        .data-row {
+            padding: 10px 20px;
+            font-size: 14px;
+            color: var(--text-main);
+            height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center;
+            border-bottom: 1px solid #f3f4f6;
+            font-weight: 500;
+        }
+
+        /* Highlights */
+        .best-price { color: var(--success); font-weight: 800; background: #ecfdf5; border-radius: 4px; }
+        .high-price { color: var(--danger); }
+
+        #loader { text-align: center; margin-top: 100px; font-weight: 600; color: var(--primary); font-size: 18px; }
+        .empty-state { width: 100%; text-align: center; padding: 60px; color: var(--text-gray); }
+
+    </style>
+</head>
+<body>
+
+    <aside>
+        <div class="brand-logo"><img src="https://walkaroo.in/images/logo.png" alt="Walkaroo"></div>
+        
+        <h3>Comparison List</h3>
+        <br>
+        
+        <div class="stat-box">
+            <div class="stat-num" id="compare-count">0</div>
+            <div class="stat-lbl">Items Selected</div>
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-title">Guide</div>
+            <p style="font-size:12px; color:#666; line-height:1.5;">
+                <span style="color:var(--success); font-weight:bold;">Green</span> indicates the best price deal.<br>
+                Scroll horizontally to view more items.
+            </p>
+        </div>
+
+        <button class="btn-clear" onclick="clearAll()">Clear All</button>
+    </aside>
+
+    <main>
+        <a href="articles.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Articles</a>
+        
+        <div class="page-header">
+            <div>
+                <h2><i class="fa-solid fa-code-compare" style="color:var(--primary)"></i> Compare Products</h2>
+            </div>
+        </div>
+
+        <div id="loader"><i class="fa-solid fa-spinner fa-spin"></i> Loading Comparison...</div>
+        
+        <div class="comparison-container" id="compare-container">
+            <!-- Dynamic Content -->
+        </div>
+
+    </main>
+
+    <script>
+        const SHEET_ID = '1JOJ7JwkDJbCpZ3NWpnsYQm1kDi2XUijyfhQ937x0NNw';
+        const SHEET_NAME = 'MASTER'; 
+        const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
+
+        let compareIds = [];
+        let compareData = [];
+
+        // Load Compare IDs
+        compareIds = JSON.parse(localStorage.getItem('compareArticles')) || [];
+        document.getElementById('compare-count').innerText = compareIds.length;
+
+        // Fetch Data
+        Papa.parse(CSV_URL, {
+            download: true,
+            header: false,
+            skipEmptyLines: true,
+            complete: function(results) {
+                if(results.data.length === 0) {
+                    alert("No Data");
+                    return;
+                }
+                processData(results.data);
+            },
+            error: function(err) {
+                document.getElementById('loader').innerText = "Connection Failed.";
+            }
+        });
+
+        function processData(rows) {
+            const headers = rows[0]; 
+            const dataRows = rows.slice(1); 
+
+            // Mapping (Same as Article Page)
+            const getIdx = (name) => headers.findIndex(h => h && h.toString().toLowerCase().trim() === name.toLowerCase());
+            const idxArticle = getIdx('ARTICLE') > -1 ? getIdx('ARTICLE') : 2;
+            const idxFeatures = getIdx('FEATURES') > -1 ? getIdx('FEATURES') : 31;
+            const idxDrive = getIdx('Drive Link') > -1 ? getIdx('Drive Link') : -1;
+            const idxBoys = 33; const idxGirls = 34; const idxKids = 35;
+            const idxGents = 36; const idxLadies = 37; const idxGiants = 38;
+
+            // Map Data
+            const allItems = dataRows.map(row => {
+                if(!row[idxArticle]) return null;
+
+                let cats = [];
+                const checkCat = (idx, name) => {
+                    if(row[idx] && (row[idx].toLowerCase() === 'true' || row[idx].length > 0)) cats.push(name);
+                };
+                checkCat(idxBoys, 'BOYS'); checkCat(idxGirls, 'GIRLS'); checkCat(idxKids, 'KIDS');
+                checkCat(idxGents, 'GENTS'); checkCat(idxLadies, 'LADIES'); checkCat(idxGiants, 'GAINTS');
+
+                let sizes = [];
+                for(let i=21; i<=24; i++) { if(row[i]) sizes.push(row[i]); }
+
+                let prices = [];
+                for(let i=26; i<=29; i++) {
+                    let p = parseFloat(row[i]);
+                    if(!isNaN(p) && p > 0) prices.push(p);
+                }
+                let minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+
+                let imgLink = "";
+                if(idxDrive > -1 && row[idxDrive]) imgLink = row[idxDrive];
+                else {
+                    let found = row.find(c => c && c.toString().includes('drive.google.com'));
+                    if(found) imgLink = found;
+                }
+
+                return {
+                    id: row[idxArticle],
+                    name: row[idxArticle],
+                    features: row[idxFeatures] || 'Standard',
+                    categories: cats.join(', ') || 'Unisex',
+                    price: minPrice,
+                    image: imgLink,
+                    size: sizes.join(', ') || '08 x 12'
+                };
+            }).filter(item => item !== null);
+
+            // Filter only Compare Items
+            compareData = allItems.filter(item => compareIds.includes(item.id));
+            renderComparison();
+        }
+
+        function renderComparison() {
+            const container = document.getElementById('compare-container');
+            document.getElementById('loader').style.display = 'none';
+
+            if(compareData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-scale-unbalanced" style="font-size:40px; margin-bottom:15px; color:#ddd"></i>
+                        <h3>Comparison List is Empty</h3>
+                        <p>Go to articles and click the <i class="fa-solid fa-code-compare"></i> icon.</p>
+                        <br>
+                        <a href="articles.html" class="btn-apply" style="display:inline-block; width:auto; padding:10px 20px; background:var(--primary); color:white; text-decoration:none; border-radius:6px;">Add Articles</a>
+                    </div>`;
+                container.style.display = "block"; // Reset flex for empty state center
+                return;
+            }
+
+            container.style.display = "flex"; // Restore flex for columns
+
+            // Calculate Lowest Price for Highlighting
+            const minPrice = Math.min(...compareData.map(i => i.price));
+
+            // 1. Build Labels Column
+            let html = `
+                <div class="specs-labels">
+                    <div class="label-row">Price (MRP)</div>
+                    <div class="label-row">Category</div>
+                    <div class="label-row">Size</div>
+                    <div class="label-row">Features</div>
+                </div>
+            `;
+
+            // 2. Build Product Columns
+            compareData.forEach(item => {
+                let imgUrl = "";
+                if(item.image && item.image.includes('drive.google.com')) {
+                    const idMatch = item.image.match(/[-\w]{25,}/);
+                    if(idMatch) imgUrl = `https://lh3.googleusercontent.com/d/${idMatch[0]}=w400`;
+                }
+
+                const imgHtml = imgUrl 
+                    ? `<img src="${imgUrl}" alt="${item.name}">` 
+                    : `<span style="color:#ccc">No Image</span>`;
+
+                // Logic for Price Class
+                const priceClass = (item.price === minPrice && item.price > 0) ? "best-price" : "";
+
+                html += `
+                    <div class="product-col">
+                        <div class="remove-icon" onclick="removeItem('${item.id}')" title="Remove"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <div class="prod-header">
+                            <div class="img-wrap">${imgHtml}</div>
+                            <div class="prod-id">Article No.</div>
+                            <div class="prod-title">${item.name}</div>
+                        </div>
+                        <div class="data-rows">
+                            <div class="data-row ${priceClass}">₹${item.price}</div>
+                            <div class="data-row">${item.categories}</div>
+                            <div class="data-row">${item.size}</div>
+                            <div class="data-row" style="font-size:12px; line-height:1.2;">${item.features}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function removeItem(id) {
+            compareIds = compareIds.filter(cid => cid !== id);
+            localStorage.setItem('compareArticles', JSON.stringify(compareIds));
+            
+            // Re-filter data
+            compareData = compareData.filter(item => item.id !== id);
+            
+            // Update UI
+            document.getElementById('compare-count').innerText = compareIds.length;
+            renderComparison();
+        }
+
+        function clearAll() {
+            if(confirm("Clear comparison list?")) {
+                localStorage.removeItem('compareArticles');
+                location.reload();
+            }
+        }
+
+    </script>
+</body>
+</html>

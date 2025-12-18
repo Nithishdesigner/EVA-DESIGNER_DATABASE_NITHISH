@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVA - Article Database Login</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #4318d1;
+            --bg-body: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-main: #111827;
+            --text-gray: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Center card vertically */
+        }
+
+        /* --- LOGIN CARD --- */
+        .login-card {
+            width: 460px; /* Exact width from visual */
+            background: #ffffff;
+            border: 2px solid var(--border-color);
+            border-radius: 11px;
+            padding: 40px 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            margin-bottom: 60px; /* Space for footer */
+        }
+
+        /* Logo Area */
+        .logo-container {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .logo-box {
+            background-color: #ee3338; /* Walkaroo Red */
+            padding: 15px 25px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .logo-box img {
+            height: 40px;
+            width: auto;
+            display: block;
+            filter: brightness(0) invert(1); /* Turns black logo white */
+        }
+
+        /* Headings */
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 35px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            height: 44px;
+            padding: 10px 15px;
+            border: 1px solid #d1d5db; /* Thinner border per image */
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            color: #111;
+        }
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 24, 209, 0.1);
+        }
+
+        /* Password Wrapper for Eye Icon */
+        .password-wrapper {
+            position: relative;
+        }
+        .eye-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #111;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Options Row */
+        .options-row {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            margin-bottom: 25px;
+            margin-top: -5px;
+        }
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #374151;
+            cursor: pointer;
+        }
+        /* Custom checkbox style to match image */
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Sign In Button */
+        .btn-submit {
+            width: 100%;
+            height: 44px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-submit:hover {
+            background-color: #3212a3;
+        }
+
+        /* --- FOOTER BAR --- */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #b0b3b8; /* Matches the gray bar in image */
+            padding: 15px 0;
+            text-align: center;
+        }
+        .footer-text {
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        .footer-link {
+            color: #ffffff;
+            text-decoration: none;
+        }
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Error Message Style */
+        #error-msg {
+            color: #dc2626;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: none;
+            background: #fee2e2;
+            padding: 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <!-- Logo Area -->
+        <div class="logo-container">
+            <div class="logo-box">
+                <!-- Using Walkaroo logo URL, filtered to white via CSS -->
+                <img src="https://walkaroo.in/images/logo.png" alt="Walkaroo">
+            </div>
+        </div>
+
+        <h1>EVA - ARTICLE DATABASE</h1>
+        <p class="subtitle">Sign in to your ArticleHub account</p>
+
+        <form id="loginForm">
+            <div id="error-msg"><i class="fa-solid fa-circle-exclamation"></i> Incorrect User Name or Password</div>
+
+            <!-- User Name Input -->
+            <div class="form-group">
+                <label for="username">User Name</label>
+                <input type="text" id="username" placeholder="Enter your user name">
+            </div>
+
+            <!-- Password Input -->
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" placeholder="Enter your password">
+                    <i class="fa-solid fa-eye eye-icon" id="togglePassword"></i>
+                </div>
+            </div>
+
+            <!-- Remember Me -->
+            <div class="options-row">
+                <label class="remember-me">
+                    <input type="checkbox"> Remember me
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-submit">Sign in</button>
+        </form>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-text">
+            Powered By : EVA Designer's &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+            Queries : <a href="mailto:nithish.g@walkaroomail.in" class="footer-link">nithish.g@walkaroomail.in</a>
+        </div>
+    </footer>
+
+    <!-- LOGIC SCRIPT -->
+    <script>
+        // 1. Password Visibility Toggle
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // 2. Login Validation Logic
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+
+            // Exact match validation
+            if (user === "Staff" && pass === "Wco") {
+                window.location.href = "index.html"; 
+            } else {
+                errorMsg.style.display = "block";
+                // Shake animation
+                const card = document.querySelector('.login-card');
+                card.style.transition = "transform 0.1s";
+                card.style.transform = "translateX(5px)";
+                setTimeout(() => card.style.transform = "translateX(-5px)", 100);
+                setTimeout(() => card.style.transform = "translateX(0)", 200);
+            }
+        });
+    </script>
+</body>
+</html>
